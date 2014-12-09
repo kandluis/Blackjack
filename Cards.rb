@@ -8,20 +8,33 @@
 ###
 
 # Map for keeping the value of each possible symbol on a card
-symbolVals = Hash["A" => 1]
-2.upto(9) do |value|
-  symbolVals[value.to_s] = value
-end
-symbolVals["T"] = 10
-symbolVals["J"] = 10
-symbolVals["Q"] = 10
-symbolVals["K"] = 10
 
-# This is an A which we know to be worth 11 points
-symbolVals["AA"] = 11
+# NOTE - in ruby, EVERYTHING is an object
+class SymbolVals < Hash
+  def initialize
+    self["A"] = 1
+    2.upto(9) do |value|
+      self[value.to_s] = value
+    end
+    self["T"] = 10
+    self["J"] = 10
+    self["Q"] = 10
+    self["K"] = 10
+
+    # This is an A which we know to be worth 11 points
+    self["AA"] = 11
+  end
+end
 
 # List of possible suits (D)iamonds, (C)lubs, (H)earts, and (S)pades
-cardSuits = ["D", "C", "H", "S"]
+class CardSuits < Array
+  def initialize
+    self[0] = "D"
+    self[1] = "C"
+    self[2] = "H"
+    self[3] = "S"
+  end
+end
 
 # A Card is either valid/invalid, consists of a symbol (A,2,...,10,J,Q,K)
 # and belong to one of (D,C,H,S) suits
@@ -38,8 +51,11 @@ class Card
   attr_reader :is_valid
   attr_reader :symbol, :suit, :value
 
+  @@cardSuits = CardSuits.new
+  @@symbolVals = SymbolVals.new
+
   def initialize(symbol, suit)
-    if symbolVals.contains?(symbol) and cardSuits.include?(suit)
+    if @@symbolVals.has_key?(symbol) and @@cardSuits.include?(suit)
       @is_valid = true
       @suit = suit
       @symbol = symbol
@@ -57,9 +73,9 @@ class Card
 
   # Returns an array of all values the card can take on
   def all_values
-    values = [symbolVals[@symbol]
+    values = [@@symbolVals[@symbol]]
     if self.ace?
-      values.push(symbolVals["AA"])
+      values.push(@@symbolVals["AA"])
     end    
     return values
   end
@@ -89,9 +105,13 @@ end
 #  .add(card) -> adds card to the botton of deck
 #  .to_s
 class Decks
+
   # Class must have at least one deck
   MIN_DECKS = 1
-
+  
+  @@cardSuits = CardSuits.new
+  @@symbolVals = SymbolVals.new
+  
   attr_reader :num_decks, :cards
 
   def initialize(num_decks)
@@ -115,9 +135,9 @@ class Decks
   # the available suits and card symbols
   def createDeck
     deck = []
-    for suit in cardSuits
-      for symbol in symbolVals.keys
-        deck.append(Card.new(symbol, suit))
+    for suit in @@cardSuits
+      for symbol in @@symbolVals.keys
+        deck << Card.new(symbol, suit)
       end
     end
 
@@ -242,11 +262,12 @@ class Hand
       return hand
     else
       return nil
+    end
   end
 
   # Can this hand be split?
   def split?
-    return @cards.length == 2 && @cards[0].symbol == @cards[1].symbol
+    return @cards.length == 2 && @@symbolVals[@cards[0].symbol] == @@symbolVals[@cards[1].symbol]
   end
 
   # double bet on card
@@ -261,6 +282,9 @@ class Hand
 
   # Return a list of values for this hand. It will return an empty list in the case
   # of an invalid hand (all possible values lead to a bust)
+
+  # Could have implemented this more specific to blackjack, but wanted to keep the
+  # BJ_HAND as general as possible
   def total
     values = [0]
     # for each card

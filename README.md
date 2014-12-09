@@ -1,4 +1,4 @@
 Blackjack
 =========
 
-Game of BlackJack implemented in Ruby
+Game of BlackJack implemented in Ruby.

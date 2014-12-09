@@ -2,15 +2,15 @@
 #
 # => Implements a (blackjack) card game player
 # => Properties
+#   => .name = name of th player
 #   => .cash = total cash on hand for betting
-#   => . 
-#
+#   => .hand = array of hands available to player 
 
-require Cards
+require 'Cards'
 
 class Player
 
-  attr_accessor :name, :cash, :bet
+  attr_accessor :name, :cash
 
   # @@ implies this is a class variable
   @@total_cash = 0
@@ -20,28 +20,32 @@ class Player
   def initialize(name, cash)
     @name = name
     @cash = cash
-    @bet = 0
     @hands = []
+    @bet = 0
 
     # update globals
-    @@cash += @cash
-  end
-
-  # Returns Name: Hands (bet) [cash]
-  def to_s
-    return "#{@name}: #{@hands.length} hand (#{@bet.to_s}) [#{@cash.to_s}]"
-  end
-
-  # access to total cash
-  def all_cash
-    return @@total_cash
+    @@total_cash += @cash
   end
 
   # adds a new hand to the player
   def add_hand(hand)
     @@total_hands += 1
-    @hands.append(hand)
+    @hands << hand
     return @hands[-1]
+  end
+
+  # returns true if the player has live hands
+  def has_hands
+    return @hands.select{|hands| hands.status == HandStatus::PLAY} != []
+  end
+
+  def total_hands
+    return @@total_hands
+  end
+
+  # access to total cash
+  def all_cash
+    return @@total_cash
   end
 
   # places the bet on the specified hand. The hand must belong to the player and
@@ -60,11 +64,18 @@ class Player
   def double_bet(hand)
     if @cash - hand.bet > 0
       @cash -= hand.bet
-      @@cash -= hand.bet
+      @@total_cash -= hand.bet
       hand.double_bet
       return true
     else
       return false
+    end
+  end
+
+  # adds winnings to player
+  def won_bet(winnings)
+    @@total_cash += winnings
+    @cash += winnings
   end
 
   # splits the specified hand into two hands if possible
@@ -73,9 +84,9 @@ class Player
     if hand.split?
       if @cash - hand.bet >= 0
         @@total_hands += 1
-        @hands.append(hand.split)
+        @hands << hand.split
         @cash -= hand.bet
-        @@cash -= hand.bet
+        @@total_cash -= hand.bet
         return true
       else
         return false
@@ -86,7 +97,7 @@ class Player
   end
 
   # called at start of a round to throw away old hands
-  def start_new_round:
+  def start_new_round
     @hands = []
   end
   
@@ -95,21 +106,9 @@ class Player
     @hands.each{ |hand| hand.stand }
   end
 
-  # adds winnings to player
-  def won_bet(winnings)
-    @@total_cash += winnings
-    @cash += winnings
+  # Returns Name: Hands [cash]
+  def to_s
+    return "#{@name}: #{@hands.length} hand(s) [Cash: #{@cash.to_s}]"
   end
-
-  # returns true of the player has live hands
-  def has_hands
-    return @hands.select{|hands| hands.status == HandStatus::PLAY} != []
-  end
-
-  def total_hands
-    return @@total_hands
-  end
-
-
 
 end
