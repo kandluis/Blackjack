@@ -82,7 +82,7 @@ class Card
 
   # Returns text version of the card in format SYMBOL (SUIT)
   def to_s
-    return "#@symbol (#@suit)"
+    return "#@symbol(#@suit)"
   end
 
   # Returns text version of the card in format SYMBOL (SUIT) of VALUES
@@ -127,7 +127,6 @@ class Decks
     1.upto(@num_decks) do |i|
       @cards += self.createDeck
     end
-
     return self
   end
 
@@ -137,7 +136,9 @@ class Decks
     deck = []
     for suit in @@cardSuits
       for symbol in @@symbolVals.keys
-        deck << Card.new(symbol, suit)
+        if symbol != "AA"
+            deck << Card.new(symbol, suit)
+        end
       end
     end
 
@@ -145,7 +146,7 @@ class Decks
   end
 
   # Removes top num_cards of deck and returns those cards
-  # Returns nil if no cards exist in the deck 
+  # Returns nil if no cards exist in the deck to fulfill the request
   def deal(num_cards)
     return @cards.slice!(0,num_cards)
   end
@@ -164,8 +165,8 @@ class Decks
 
   # Converts deck to a string, with cards printed in current shuffled order
   def to_s
-    text = "[#@num_decks deck shoe]\n"
-    @card.map.with_index { |c, i| 
+    text = "[#@num_decks deck(s) to start]\n"
+    @cards.each_with_index.map { |c, i| 
       if i % 20 == 0
          text += "\n"
       else
@@ -288,11 +289,10 @@ class Hand
   def total
     values = [0]
     # for each card
-    @cards.each{|card| 
-
+    @cards.each{ |c| 
       # calculate concatenated list of possible values 
       updated_values = []
-      @card.all_values.each{|value| 
+      c.all_values.each{|value| 
         updated_values += values.map{|prev_value| prev_value + value}
       }
 
@@ -305,7 +305,7 @@ class Hand
 
   # generates string representing the hand as a [Card List] (Values) {Comment}
   def to_s
-    comment = self.bust? ? "Done Busted!" : (self.bj? ? "BLACKJACK!" : "Keep it stead mate!")
-    return "[#{@cards.join(", ")}] (#{@total.join(" or ")}) {#{comment}}"
+    comment = self.bust? ? "Done Busted!" : (self.bj? ? "BLACKJACK!" : "Keep it steady mate!")
+    return "[#{@cards.map{|card| card.to_s }.join(", ")}] (#{self.total.join(" or ")}) {#{comment}}"
   end 
 end 

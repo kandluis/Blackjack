@@ -10,7 +10,7 @@ require 'Cards'
 
 class Player
 
-  attr_accessor :name, :cash
+  attr_accessor :name, :cash, :bet, :hands
 
   # @@ implies this is a class variable
   @@total_cash = 0
@@ -50,11 +50,12 @@ class Player
 
   # places the bet on the specified hand. The hand must belong to the player and
   # the player must have enough cash to make the bet
-  def place_bet(hand,bet)
-    if @hands.include?(hand) && @cash - bet >= 0
-      hand.bet = bet
-      @cash -= bet
-      @@total_cash -= bet
+  def place_bet(hand)
+    if @hands.include?(hand) && @cash - @bet >= 0
+      hand.bet = @bet
+      @cash -= @bet
+      @@total_cash -= @bet
+      return true
     else
       return false
     end
@@ -66,6 +67,7 @@ class Player
       @cash -= hand.bet
       @@total_cash -= hand.bet
       hand.double_bet
+      @bet *= 2
       return true
     else
       return false
@@ -85,6 +87,7 @@ class Player
       if @cash - hand.bet >= 0
         @@total_hands += 1
         @hands << hand.split
+        @bet *= 2
         @cash -= hand.bet
         @@total_cash -= hand.bet
         return true
@@ -92,7 +95,7 @@ class Player
         return false
       end
     else
-      raise ArgumentError, "Hand cannot be split: #{hand.to_s}"
+      return false
     end
   end
 

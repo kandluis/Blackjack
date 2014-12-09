@@ -29,6 +29,24 @@ class InputOutput
     puts
   end
 
+  def start_round(game,round)
+    self.display("Game #{game}, Round #{round}\n\n\n\n\n")
+  end
+
+  # displays the blackjack deck (used for debugging purposes
+  def show_deck(deck) 
+    self.display(deck.to_s)
+  end
+
+  # Prompts the user for a bet between min and max
+  def prompt_bet(player,min,max,step)
+    def valid_bet(x)
+      lambda {return x.to_i >= min && x.to_i < max && player.cash >= x.to_i}
+    end
+    return promptFunction("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
+                          min, method(:valid_bet)).to_i
+  end
+
   # Prompts the user for an integer > 0. Empty entry returns default.
   def prompt_positive(msg, default)
     def positive(x)
@@ -43,7 +61,7 @@ class InputOutput
       return (x.downcase == "y" || x.downcase == "yes" ||
         x.downcase == "n" || x.downcase == "no")
     end
-    return promptFunction(msg, default, method(:yes_no))[0] == "y"
+    return promptFunction(msg, default, method(:yes_no)).chars.first == "y"
   end
 
   # Prompts for a message until the result satisfies the given function
@@ -51,7 +69,7 @@ class InputOutput
     result = nil
     while not result
       result = prompt(msg,default)
-      if function.call(msg)
+      if !function.call(result)
         result = nil
         self.try_again
       end 
@@ -93,6 +111,25 @@ class InputOutput
   # display a simple message to the user
   def display(msg)
     puts msg
+  end
+
+  # retrieves the move selection from the suers and returns it to the string
+  # in any format you'd like
+  def get_move
+    result = nil
+    while not result
+      result = self.prompt("What would you like to do? [h]:", "h")
+    end
+    return result
+  end
+
+  # Shows the hands of the players passed as inputs
+  def show_hands(players)
+    for player in players
+      for hand in player.hands
+        puts "#{player.to_s} #{hand.to_s}"
+      end
+    end
   end
 
   def try_again
