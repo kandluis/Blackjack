@@ -1,4 +1,6 @@
 # deals with the input/output of the blackJack game
+trap("SIGINT") { throw :quit }
+
 class InputOutput
   def initialize
     @players = 0
@@ -16,6 +18,7 @@ class InputOutput
   def instructions
     puts 
     puts "For instructions, press i."
+    puts "For statistics on current game, place m"
     puts "To quit, press q."
     puts
     puts "These are the actions you can perform on each hand:"
@@ -30,7 +33,7 @@ class InputOutput
   end
 
   def start_round(game,round)
-    self.display("Game #{game}, Round #{round}\n\n\n\n\n")
+    self.display("\n\n\n\n-------Game #{game}, Round #{round}------\n")
   end
 
   # displays the blackjack deck (used for debugging purposes
@@ -71,7 +74,7 @@ class InputOutput
       result = prompt(msg,default)
       if !function.call(result)
         result = nil
-        self.try_again
+        self.retry
       end 
     end
     return result
@@ -103,8 +106,7 @@ class InputOutput
       puts player.to_s
     end
 
-    puts "Total cash: #{players[0].all_cash}."
-    puts "You completed #{games - 1} complete games"
+    puts "You completed #{games} complete games"
     puts "   and #{rounds} rounds in the final game."
   end
 
@@ -132,7 +134,7 @@ class InputOutput
     end
   end
 
-  def try_again
+  def retry
     puts "Please try again!"
   end
 end

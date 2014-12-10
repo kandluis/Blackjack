@@ -216,12 +216,24 @@ class Hand
   # need only read access
   attr_reader :cards
 
+  @@cardSuits = CardSuits.new
+  @@symbolVals = SymbolVals.new
+
   def initialize
     @bet = 0
     @status = HandStatus::PLAY
     @cards = []
 
     return self
+  end
+
+  # returns the maximum value of the hand - call only if it is know that a hand exists
+  def max_hand
+    max = self.total[0]
+    for value in self.total
+      max = value < max ? max : value
+    end
+    return max
   end
 
   # Receives a hit (so adds a card) if the hand is in play status
@@ -234,9 +246,9 @@ class Hand
     end
   end
 
-  # Can this hand be hit or has it already busted
+  # Can this hand be hit or has it already busted (or been set to stand)
   def hit?
-    return self.total.select{|value| value < BJ_HAND} == []
+    return self.total.select{|value| value <= BJ_HAND} != [] && @status != HandStatus::STAND
   end
 
   # Is this hand a bust?
@@ -246,7 +258,7 @@ class Hand
 
   # Is this hand a blackjack?
   def bj?
-    return self.total.max == BJ_HAND
+    return self.max_hand == BJ_HAND
   end
 
   # set the status of the hand to stand
@@ -260,6 +272,7 @@ class Hand
     if self.split? 
       hand = Hand.new
       hand.hit(@cards.slice!(1))
+      hand.bet = @bet
       return hand
     else
       return nil
@@ -268,6 +281,7 @@ class Hand
 
   # Can this hand be split?
   def split?
+    puts "#{@@symbolVals[@cards[0].symbol]} #{@@symbolVals[@cards[1].symbol]}" 
     return @cards.length == 2 && @@symbolVals[@cards[0].symbol] == @@symbolVals[@cards[1].symbol]
   end
 
@@ -278,7 +292,7 @@ class Hand
 
   # Does the hand contain an A
   def has_aces?
-    return (@cards.map {|card| card.symbol}).contains("A")
+    return (@cards.map {|card| card.symbol}).include?("A")
   end
 
   # Return a list of values for this hand. It will return an empty list in the case
@@ -287,8 +301,13 @@ class Hand
   # Could have implemented this more specific to blackjack, but wanted to keep the
   # BJ_HAND as general as possible
   def total
+    return self.display_total.select{|value| value <= BJ_HAND}
+  end
+
+  def display_total
     values = [0]
     # for each card
+    @cards.flatten!
     @cards.each{ |c| 
       # calculate concatenated list of possible values 
       updated_values = []
@@ -297,7 +316,7 @@ class Hand
       }
 
       # remove all repeat values and those > BJ_HAND so we don't do unnecessary work later
-      values = (updated_values.uniq).select{|value| value <= BJ_HAND}
+      values = updated_values.uniq
     }
 
     return values
@@ -306,6 +325,6 @@ class Hand
   # generates string representing the hand as a [Card List] (Values) {Comment}
   def to_s
     comment = self.bust? ? "Done Busted!" : (self.bj? ? "BLACKJACK!" : "Keep it steady mate!")
-    return "[#{@cards.map{|card| card.to_s }.join(", ")}] (#{self.total.join(" or ")}) {#{comment}}"
+    return "[#{@cards.map{|card| card.to_s }.join(", ")}] (#{self.display_total.join(" or ")}) {#{comment}}"
   end 
 end 
