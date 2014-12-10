@@ -78,6 +78,7 @@ class Game
           self.finish_round
           started_round = false
         end
+
         @game_num += 1
       end
     end
@@ -308,7 +309,8 @@ class Game
 
     # find broke players
     @losers += @players.select{ |player| player.cash <= 0 }
-    @player = @players.select{ |player| player.cash > 0}
+    @players = @players.select{ |player| player.cash > 0}
+
   end
 
   # this is executed in the case of an incomplete round

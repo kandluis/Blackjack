@@ -43,11 +43,23 @@ class InputOutput
 
   # Prompts the user for a bet between min and max
   def prompt_bet(player,min,max,step)
+    result = nil
+    while not result
+      result = prompt("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
+                      min).to_i
+      if result < min || result > max || result > player.cash
+        result = nil
+        self.retry
+      end 
+    end
+    return result
+    '''
     def valid_bet(x)
-      lambda {return x.to_i >= min && x.to_i < max && player.cash >= x.to_i}
+      lambda{ return(x.to_i >= min && x.to_i < max && player.cash >= x.to_i) }
     end
     return promptFunction("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
-                          min, method(:valid_bet)).to_i
+                          min, valid_bet).to_i
+    '''
   end
 
   # Prompts the user for an integer > 0. Empty entry returns default.
