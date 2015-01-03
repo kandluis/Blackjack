@@ -1,3 +1,22 @@
+# Game Class
+#
+# => Implements a blackjack game
+# => Properties
+#   => .io = io device class used to display messages to the player
+#   => .dealer = Player Class fulfilling dealer role
+#   => .deck = Decks class fulfilling the role of the table shoe
+#   => .deck_num = number of decks in a shoe as specified by the player
+#   => .num_rounds = tracks blackjack rounds played
+#   => .game_num = tracks number of full games played
+#   => .cash = cash each player starts with in a new game
+#   => .players = Player Set containing playable contestants
+#   => .losers = Player Set containing unplayable contestants
+#   => .min_bet = minimum allowed bet on a single hand
+#   => .max_bet = maximum allowed bet on a single hand
+#   => .bet_step = allowed bet increments
+#   => .dealer_stay = dealer will hit until reaching this value
+#   => .wait = wait time in seconds between each round of the game
+
 require 'InputOutput'
 require 'Cards'
 require 'Players'
@@ -22,13 +41,13 @@ class Game
     @losers = []
 
     # using http://www.pagat.com/banking/blackjack.html as reference for the rules
-    # of the blackjack game
+    # of the blackjack game 
+    # TODO: add user ability to modify these parameters
     @min_bet = 5
     @max_bet = 100
     @bet_step = 1
-    @dealer_stay = 17 # dealer stops hitting if he reaches this point
+    @dealer_stay = 17 
 
-    # other constants
     @wait = 1
   end
 
@@ -48,7 +67,7 @@ class Game
       @io.welcome_msg
       self.init_game
 
-    # if user quits, go ahead and still show end results
+      # if user quits, go ahead and still show end results
       # user want to continue
       while @game_num == 1 || self.continue_play?
         self.start_game
@@ -59,15 +78,20 @@ class Game
 
           self.reset_round
           self.place_bets
+
+          # we consider a round to have started once the bets are placed
+
           started_round = true
 
-          if (!self.initial_deal) # takes care of dealing with dealer, too
+          # deal out cards (including dealer)
+          if (!self.initial_deal)
             self.incomplete_round
             break
           end
+
           self.show_hands if @debug
 
-          if !@dealer.hands[0].bj? 
+          if !@dealer.main_hand.bj? 
             # ran out of cards during the round?
             if !self.play_round
               self.incomplete_round
@@ -98,20 +122,20 @@ class Game
 
   # does the user want to continue playing with a new deck?
   def continue_play?
-    return @io.prompt_yes_no("Would you like to continue playing? [no]\n This will be game #{@game_num}", "no")
+    return @io.continue_play?(@game_num)
   end
 
   # initializes the game
   def init_game
     @dealer = Player.new("Dealer", 0)
-    @deck_num = @io.prompt_positive("Number of decks at table? [#{Decks::MIN_DECKS}]", Decks::MIN_DECKS)
+    @deck_num = @io.get_shoe_size
 
     # in case user wants to change the default amount of cash per player
-    @cash = @io.prompt_positive("How much cash per player? [#{@cash}]", @cash)
+    @cash = @io.get_default_cash(@cash)
 
     # create the players!
-    1.upto(@io.prompt_positive("Number of players? [1]",1)) do |i|
-      @players << Player.new(@io.prompt("Player Name? [Player #{i}]","Player #{i}"), @cash)
+    1.upto(@io.get_num_players) do |i|
+      @players << Player.new(@io.get_player_name(i), @cash)
     end
   end
 
@@ -127,7 +151,7 @@ class Game
       # allow players with little cash to bet
       min = (@min_bet < player.cash) ? @min_bet : player.cash
       max = (@max_bet < player.cash) ? @max_bet : player.cash
-      player.bet = @io.prompt_bet(player, min, max, @bet_step)
+      player.bet = @io.get_bet(player, min, max, @bet_step)
       hand = Hand.new
       player.add_hand(hand)
       player.place_bet(hand)
@@ -158,13 +182,7 @@ class Game
 
   # displays the hand of the dealer and players (used for debugging)
   def show_hands
-    players = @players + [@delaer]
-    for player in @players + [@dealer]
-      @io.display(player.to_s)
-      for hand in player.hands
-        @io.display("     \##{hand.to_s}")  
-      end
-    end
+    @io.show_hands(@players + [@dealer])
   end
 
   # plays a single round of black jack! Each player has 2 cards, dealer also has 2
@@ -172,16 +190,15 @@ class Game
   # everyone is bust or everyone is stand!
   # Returns false if the round could not be completed, true otherwise
   def play_round
-    # display the dealer face up card
-    @io.display("Dealer has: #{@dealer.hands[0].cards[0]}\n\n")
+    @io.show_card(@dealer, 0, 0)
     # players play!
     for player in @players
       for hand in player.hands
-        @io.display("#{player.name}. Current hand is: #{hand.to_s}.")
+        @io.show_hand(player,hand)
         while hand.hit?
           # on black jack, let the user know he's staying
           if hand.bj?
-            @io.display("Nice job with the BJ! Let's stay put.")
+            @io.player_bj
             hand.stand
             break
           end
@@ -235,7 +252,7 @@ class Game
             end
 
             # update hand
-            @io.display("#{player.name}. New hand is: #{hand.to_s}.")
+            @io.show_hand(player, hand)
           end
         end
       end
@@ -261,7 +278,8 @@ class Game
     dealer_hand = @dealer.hands[0]
 
     # have the dealer play his hand
-    @io.display("Dealer Hand: #{dealer_hand.to_s}")
+    @io.finish_round
+    @io.show_hand(@dealer, dealer_hand)
     while !dealer_hand.bust? && dealer_hand.max_hand < 17
       card = @deck.deal(1)
       if card == nil
@@ -272,36 +290,37 @@ class Game
         return false
       end
       dealer_hand.hit(card)
-      @io.display("Next Dealer Hand: #{dealer_hand.to_s}")
+      @io.show_hand(@dealer, dealer_hand)
       sleep(@wait)
+
     end
 
     # now check results
     for player in @players
       for hand in player.hands
-        @io.display("\n#{player.name} has hand #{hand.to_s}")
+        @io.show_hand(player, hand)
         # if both bust or both bj or values are equal
         if (hand.bust? && dealer_hand.bust?) ||
           (hand.bj? && dealer_hand.bj?) || 
           (hand.max_hand == dealer_hand.max_hand)
-          @io.display("Oh, darn! #{player.name} doesn't get anything that round! Now at $#{player.cash}.")
+          @io.player_tie(player)
         else
           # player busted or dealer black jack or both player and dealer busted
           # or player lost
           if (hand.bust? || dealer_hand.bj? ||
             (!dealer_hand.bust? && hand.max_hand < dealer_hand.max_hand))
             @dealer.won_bet(hand.bet)
-            @io.display("Looks like the dealer got this one! You're left with $#{player.cash}")
+            @io.player_lose(player)
           # player black jack
           elsif hand.bj?
             player.won_bet(2.5*hand.bet)
-            @io.display("CONGRATULATIONS! You now have $#{player.cash}!")
+            @io.player_win_bj(player)
           # dealer busted or player wins
           elsif dealer_hand.bust? || hand.max_hand > dealer_hand.max_hand
             player.won_bet(2*hand.bet)
-            @io.display("A normal win. Now you have $#{player.cash}")
+            @io.player_win(player)
           else 
-            raise Exception("Should not get here!")
+            raise Exception("Should not get here! Error when checking results")
           end
         end
       end
@@ -315,7 +334,7 @@ class Game
 
   # this is executed in the case of an incomplete round
   def incomplete_round
-    @io.display("---Dealer ran out of cards this round!---\n\n")
+    @io.out_of_cards
     # restore player bets 
     for player in @players
       player.cash += player.bet

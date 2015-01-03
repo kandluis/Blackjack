@@ -12,10 +12,6 @@ class Player
 
   attr_accessor :name, :cash, :bet, :hands
 
-  # @@ implies this is a class variable
-  @@total_cash = 0
-  @@total_hands = 0
-
   # New player with no hands, name name, and available cash cash
   def initialize(name, cash)
     @name = name
@@ -23,13 +19,10 @@ class Player
     @hands = []
     @bet = 0
 
-    # update globals
-    @@total_cash += @cash
   end
 
-  # adds a new hand to the player
+  # adds a new hand to the player return the just added hand
   def add_hand(hand)
-    @@total_hands += 1
     @hands << hand
     return @hands[-1]
   end
@@ -39,13 +32,9 @@ class Player
     return @hands.select{|hands| hands.status == HandStatus::PLAY} != []
   end
 
-  def total_hands
-    return @@total_hands
-  end
-
-  # access to total cash
-  def all_cash
-    return @@total_cash
+  # return zero-indexed hand if available (primarily used by the dealer)
+  def main_hand
+    return @hands[0]
   end
 
   # places the bet on the specified hand. The hand must belong to the player and
@@ -54,7 +43,6 @@ class Player
     if @hands.include?(hand) && @cash - @bet >= 0
       hand.bet = @bet
       @cash -= @bet
-      @@total_cash -= @bet
       return true
     else
       return false
@@ -65,7 +53,6 @@ class Player
   def double_bet(hand)
     if @cash - hand.bet > 0
       @cash -= hand.bet
-      @@total_cash -= hand.bet
       hand.double_bet
       @bet *= 2
       return true
@@ -76,7 +63,6 @@ class Player
 
   # adds winnings to player
   def won_bet(winnings)
-    @@total_cash += winnings
     @cash += winnings
   end
 
@@ -85,11 +71,9 @@ class Player
   def split_hand(hand)
     if hand.split?
       if @cash - hand.bet >= 0
-        @@total_hands += 1
         @hands << hand.split
         @bet *= 2
         @cash -= hand.bet
-        @@total_cash -= hand.bet
         return true
       else
         return false
@@ -115,3 +99,8 @@ class Player
   end
 
 end
+
+class Dealer < Player
+
+end
+

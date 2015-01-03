@@ -1,5 +1,16 @@
+# IO Class
+#
+# => Implements the input/output functionality for a blackjack game.
+#    Used so we can abstract the input/output functionality. Currently implements
+#    A simple terminal based game.
+# => Properties
+#   => .players = number of players playing the blackjack game
+
 # deals with the input/output of the blackJack game
 trap("SIGINT") { throw :quit }
+
+# access to Decks constants
+require 'Cards'
 
 class InputOutput
   def initialize
@@ -33,26 +44,86 @@ class InputOutput
   end
 
   def start_round(game,round)
-    self.display("\n\n\n\n-------Game #{game}, Round #{round}------\n")
+    display("\n\n\n\n-------Game #{game}, Round #{round}------\n")
   end
 
   # displays the blackjack deck (used for debugging purposes
   def show_deck(deck) 
-    self.display(deck.to_s)
+    display(deck.to_s)
   end
 
-  # Prompts the user for a bet between min and max
-  def prompt_bet(player,min,max,step)
+  # displays the endgame statistics
+  def show_stats(players, rounds, games)
+    for player in players
+      puts player.to_s
+    end
+
+    puts "You completed #{games} complete games"
+    puts "   and #{rounds} rounds in the final game."
+  end
+
+  # Shows the hands of the players passed as inputs
+  def show_hands(players)
+    for player in players
+      for hand in player.hands
+        puts "#{player.to_s} ------ #{hand.to_s}"
+      end
+    end
+  end
+
+  # Shows the j-th card in the i-th hand of the given player
+  def show_card(player, i, j)
+    display("#{player.name} has: #{player.hands[i].cards[j]}\n\n")
+  end
+
+  # Shows the player and his hand
+  def show_hand(player, hand)
+    display("#{player.name} has hand: #{hand.to_s}.")
+  end
+
+  # retrieves the move selection from the suers and returns it to the string
+  # in any format you'd like
+  def get_move
+    result = nil
+    while not result
+      result = prompt("What would you like to do? [h]:", "h")
+    end
+    return result
+  end
+
+  # retrieves the number of decks in the shoe for this blackjack game instance
+  def get_shoe_size
+    return prompt_positive("Number of decks at table? [#{Decks::MIN_DECKS}]", Decks::MIN_DECKS)
+  end
+
+  # retrieves default value of cash to be used for each starting player
+  def get_default_cash(curr_cash)
+    return prompt_positive("How much cash per player? [#{curr_cash}]", curr_cash)
+  end
+
+  # retrieves the number of players in the game
+  def get_num_players
+    return prompt_positive("Number of players? [1]",1)
+  end
+
+  # retrieves the name of a single player
+  def get_player_name(name)
+    return prompt("Player Name? [Player #{name}]","Player #{name}")
+  end
+
+  # retrieves the user for a bet between min and max
+  def get_bet(player,min,max,step)
     result = nil
     while not result
       result = prompt("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
                       min).to_i
       if result < min || result > max || result > player.cash
         result = nil
-        self.retry
+        retry
       end 
     end
     return result
+
     '''
     def valid_bet(x)
       lambda{ return(x.to_i >= min && x.to_i < max && player.cash >= x.to_i) }
@@ -61,6 +132,43 @@ class InputOutput
                           min, valid_bet).to_i
     '''
   end
+
+  # Shows messages prompting the user whether or not he wishes to start a new 
+  # blackjack game
+  def continue_play?(game_num)
+    return prompt_yes_no("Would you like to continue playing? [no]\n This will be game #{game_num}", "no")
+  end
+
+  # Messages for the user when he/she wins/ties/loses
+  
+  def player_bj
+    display("Nice job with the BJ! Let's stay put.")
+  end
+  def player_tie(player)
+    display("Oh, darn! #{player.name} doesn't get anything that round! Now at $#{player.cash}.")
+  end
+  def player_lose(player)
+    display("Looks like the dealer got this one! #{player.name} is left with $#{player.cash}")
+  end
+  def player_win_bj(player)
+    display("CONGRATULATIONS! #{player.name} now has $#{player.cash}!")
+  end
+  def player_win(player)
+    display("A normal win. Now #{player.name} has $#{player.cash}")
+  end
+
+  # Shoe no longer contains cards
+  def out_of_cards
+    display("---Dealer ran out of cards this round!---\n\n")
+  end
+
+  # Message displayed when the round is about to be settled
+  def finish_round
+    display("\n\n ---------------- TIME TO SETTLE ---------------- \n\n")
+  end
+
+  ##### HELPER FUNCTIONS - Do not access outside of class ######
+  private # declares all methods below as private
 
   # Prompts the user for an integer > 0. Empty entry returns default.
   def prompt_positive(msg, default)
@@ -86,7 +194,7 @@ class InputOutput
       result = prompt(msg,default)
       if !function.call(result)
         result = nil
-        self.retry
+        retry
       end 
     end
     return result
@@ -95,14 +203,14 @@ class InputOutput
   # Prompts the user for a simple msg. On empty entry, returns default.
   def prompt(msg, default)
     result = nil
-    while not result 
-      puts "#{msg}"
+    while not result
+      display(msg)
       result = gets.strip
       if result.downcase == "q"
         throw :quit
       elsif result.downcase == "i"
         result = nil
-        self.instructions
+        instructions
       elsif result == ""
         return default
       else 
@@ -112,41 +220,14 @@ class InputOutput
     return result
   end
 
-  # displays the endgame statistics
-  def show_stats(players, rounds, games)
-    for player in players
-      puts player.to_s
-    end
-
-    puts "You completed #{games} complete games"
-    puts "   and #{rounds} rounds in the final game."
+  def retry
+    puts "Please try again!"
   end
 
   # display a simple message to the user
   def display(msg)
+    puts
     puts msg
   end
 
-  # retrieves the move selection from the suers and returns it to the string
-  # in any format you'd like
-  def get_move
-    result = nil
-    while not result
-      result = self.prompt("What would you like to do? [h]:", "h")
-    end
-    return result
-  end
-
-  # Shows the hands of the players passed as inputs
-  def show_hands(players)
-    for player in players
-      for hand in player.hands
-        puts "#{player.to_s} #{hand.to_s}"
-      end
-    end
-  end
-
-  def retry
-    puts "Please try again!"
-  end
 end
