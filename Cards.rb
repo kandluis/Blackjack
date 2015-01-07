@@ -39,7 +39,6 @@ end
 # A Card is either valid/invalid, consists of a symbol (A,2,...,10,J,Q,K)
 # and belong to one of (D,C,H,S) suits
 # Variables:
-#  .is_valid
 #  .suit
 #  .symbol
 # Methods:
@@ -48,7 +47,6 @@ end
 #  .to_s -> 
 class Card
   # mark readable attributes (should not be changed)
-  attr_reader :is_valid
   attr_reader :symbol, :suit, :value
 
   @@cardSuits = CardSuits.new
@@ -56,7 +54,6 @@ class Card
 
   def initialize(symbol, suit)
     if @@symbolVals.has_key?(symbol) and @@cardSuits.include?(suit)
-      @is_valid = true
       @suit = suit
       @symbol = symbol
     else
