@@ -65,41 +65,41 @@ class Game
     started_round = false
     catch :quit do
       @io.welcome_msg
-      self.init_game
+      init_game
 
       # if user quits, go ahead and still show end results
       # user want to continue
-      while @game_num == 1 || self.continue_play?
-        self.start_game
+      while @game_num == 1 || continue_play?
+        start_game
         # play while we have cards and we still have players with money
-        while self.can_play?
+        while can_play?
           @io.start_round(@game_num, @num_rounds + 1)
           @io.show_deck(@deck) if @debug
 
-          self.reset_round
-          self.place_bets
+          reset_round
+          place_bets
 
           # we consider a round to have started once the bets are placed
 
           started_round = true
 
           # deal out cards (including dealer)
-          if (!self.initial_deal)
-            self.incomplete_round
+          if (!initial_deal)
+            incomplete_round
             break
           end
 
-          self.show_hands if @debug
+          show_hands if @debug
 
           if !@dealer.main_hand.bj? 
             # ran out of cards during the round?
-            if !self.play_round
-              self.incomplete_round
+            if !play_round
+              incomplete_round
               break
             end
           end
 
-          self.finish_round
+          finish_round
           started_round = false
         end
 
@@ -109,7 +109,7 @@ class Game
 
     # we started play
     if @deck:
-      self.incomplete_round if started_round
+      incomplete_round if started_round
       @io.show_stats(@players, @num_rounds, @game_num)
     end
   end
@@ -343,7 +343,7 @@ class Game
     end
 
     # reset players
-    self.reset_round
+    reset_round
   end
 
 end
