@@ -112,8 +112,10 @@ class Game
       self.incomplete_round if started_round
       @io.show_stats(@players, @num_rounds, @game_num)
     end
-
   end
+
+  ####### ONLY EXPOSED METHOD IS .play #######
+  private 
 
   # can we attempt to play one more round on the current deck
   def can_play?
@@ -343,4 +345,5 @@ class Game
     # reset players
     self.reset_round
   end
+
 end
