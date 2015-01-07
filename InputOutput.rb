@@ -119,7 +119,7 @@ class InputOutput
                       min).to_i
       if result < min || result > max || result > player.cash
         result = nil
-        retry
+        puts "Please try again!"
       end 
     end
     return result
@@ -194,7 +194,7 @@ class InputOutput
       result = prompt(msg,default)
       if !function.call(result)
         result = nil
-        retry
+        puts "Please try again!"
       end 
     end
     return result
@@ -218,10 +218,6 @@ class InputOutput
       end
     end
     return result
-  end
-
-  def retry
-    puts "Please try again!"
   end
 
   # display a simple message to the user

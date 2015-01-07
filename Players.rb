@@ -34,7 +34,11 @@ class Player
 
   # return zero-indexed hand if available (primarily used by the dealer)
   def main_hand
-    return @hands[0]
+    if has_hands
+      return @hands[0]
+    else
+      return false
+    end
   end
 
   # places the bet on the specified hand. The hand must belong to the player and
@@ -49,9 +53,10 @@ class Player
     end
   end
 
-  # double bet on the specified hand, returns false if not enough cash
+  # double bet on the specified hand, returns false if not enough cash or not owner
+  # of the hand
   def double_bet(hand)
-    if @cash - hand.bet > 0
+    if @hands.include?(hand) && @cash - hand.bet > 0
       @cash -= hand.bet
       hand.double_bet
       @bet *= 2
@@ -97,10 +102,6 @@ class Player
   def to_s
     return "#{@name}: #{@hands.length} hand(s) [Cash: #{@cash.to_s}]"
   end
-
-end
-
-class Dealer < Player
 
 end
 

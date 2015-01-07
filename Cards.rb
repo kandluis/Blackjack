@@ -177,6 +177,9 @@ class Decks
 
     return text
   end
+
+  # no need for this to be accessible outside class
+  protected :createDeck
 end
 
 
@@ -211,7 +214,7 @@ class Hand
   BJ_HAND = 21
 
   # need to change these from the outside
-  attr_accessor :bet, :state
+  attr_accessor :bet, :state, :status
 
   # need only read access
   attr_reader :cards
@@ -229,6 +232,9 @@ class Hand
 
   # returns the maximum value of the hand - call only if it is know that a hand exists
   def max_hand
+    if self.total == []
+      return 0
+    end
     max = self.total[0]
     for value in self.total
       max = value < max ? max : value
