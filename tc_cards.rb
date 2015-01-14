@@ -1,3 +1,10 @@
+####
+# Test cases for the class definitions in Cards.rb 
+#
+# Author: Luis Perez
+# Last modified: January 13, 2015
+###
+
 require 'test/unit'
 require 'Cards'
 
@@ -40,6 +47,11 @@ class CardTest < Test::Unit::TestCase
     @card = Card.new("K", "S")
   end
 
+  def test_valid
+    assert(@cardA.is_valid)
+    assert(@card.is_valid)
+  end
+
   # card is an ace
   def test_ace
     assert(@cardA.ace?, "Ace validation")
@@ -51,6 +63,21 @@ class CardTest < Test::Unit::TestCase
     assert_equal(2, @cardA.all_values.length, "Ace is double valued")
     assert_equal(1, @card.all_values.length, "Other cards are single valued")
   end
+
+  def test_strings
+    puts
+    puts "Testing card conversion to string."
+    puts "Ace of Diamonds is first, then King of Spades. Both in short and long format."
+    puts @cardA.to_s
+    puts @cardA.to_long_s
+    puts
+    puts @card.to_s
+    puts @card.to_long_s
+    puts
+
+    # to make sure printing occurred
+    assert(true)
+  end
 end
 
 class DeckTest < Test::Unit::TestCase
@@ -61,9 +88,15 @@ class DeckTest < Test::Unit::TestCase
     @deckMulti = Decks.new(@numMultiDecks)
   end
 
+  # accessing attributes
+  def test_setup
+    assert_equal(1, @deck.num_decks)
+    assert_equal(@numMultiDecks, @deckMulti.num_decks)
+  end
+
   # test basic facts about decks
   def test_simple
-    assert_equal(52, @deck.cards.length, "Single deck length")
+    assert_equal(52, @deck.size, "Single deck length")
     assert_equal(52 * @numMultiDecks, @deckMulti.cards.length, "Multiple decks length")
   end
 
@@ -71,30 +104,77 @@ class DeckTest < Test::Unit::TestCase
   def test_deck_shuffle
     1.upto(@numMultiDecks) do |x|
       @deck.shuffle
-      assert_equal(52, @deck.cards.length, "Deck shuffle")
+      assert_equal(52, @deck.size, "Deck shuffle")
       assert_equal(52 * @numMultiDecks, @deckMulti.cards.length, "Multiple deck shuffle")
     end
+  end
+
+  # testing the deal function which should return a card object until the deck is empty
+  def test_deal
+    1.upto(@deck.size) do |i|
+      card = @deck.deal(1)
+      if !card.is_a?(Card)
+        puts card
+      end
+      cards = @deckMulti.deal(@numMultiDecks)
+      assert_equal(@numMultiDecks, cards.length, "Deck can deal multiple cards at once")
+      cards.each{ |c| assert(c.is_a?(Card), "Multideal deals all cards")}
+    end
+
+    # empty deck returns nil (TODO: could we raise an exception instead?)
+    assert(@deck.size == 0 && @deck.deal(1) == nil, "Empty deck")
+    assert(@deckMulti.cards.length == 0 && @deckMulti.deal(1) == nil, "Empty shoe")
+  end
+
+  # test the ability to add a card to the deck
+  def test_add_card
+    size = @deck.size
+    @deck.add_card(Card.new("A","D"))
+    assert_equal(size + 1, @deck.size)
+  end
+
+  def test_strings
+    puts 
+    puts "Testing deck conversion to string."
+    puts "Full size, standard deck."
+    puts 
+    puts @deck.to_s
+    puts
+    puts "After a shuffle"
+    puts
+
+    @deck.shuffle
+
+    puts @deck.to_s
+    puts
+
+    assert(true)
   end
 end
 
 class HandTest < Test::Unit::TestCase
   def setup
+    # corresponding keys in below hashes should be used in conjunction
+    # could have made into a two-level hash, but the below made testing easier
     @hands = Hash['bj', Hand.new, 'bust', Hand.new, 'hit', Hand.new]
     @cards = Hash['bj', [Card.new("A", "D"), Card.new("K", "D")], 
       'bust', [Card.new("K", "D"), Card.new("Q", "D"), Card.new("J", "D")],
       'hit', [Card.new("2", "D")]]
     @values = Hash['bj', 21, 'bust', 0, 'hit', 2]
-  end
 
-  # test setup occurred correctly
-  def test_setup
-    @hands.each{|key, hand| assert_equal(HandStatus::PLAY, hand.status, "Hand Status")}
     # add cards to decks
     @hands.each{|key, hand| 
       @cards[key].each{|card| 
         hand.hit(card)
       }
     }
+  end
+
+  # test setup occurred correctly
+  def test_setup
+    # assure hands are playable
+    @hands.each{|key, hand| assert_equal(HandStatus::PLAY, hand.status, "Hand Status")}
+    
     # assert lengths
     @hands.each{|key, hand|
       assert_equal(@cards[key].length, hand.cards.length)
@@ -103,16 +183,11 @@ class HandTest < Test::Unit::TestCase
   end
 
   # test hand is correct value
-  def test_values
-    # add cards to decks
-    @hands.each{|key, hand| 
-      @cards[key].each{|card| 
-        hand.hit(card)
-      }
-    }
-    
+  def test_values    
+    # test values match up
     @hands.each{|key, hand|
       assert_equal(@values[key], hand.max_hand, "Hand value")
+      
       # .hit?, .bust?, .bj? work
       assert(key != "hit" || hand.hit?)
       assert(key != "bust" || hand.bust?)
@@ -125,7 +200,12 @@ class HandTest < Test::Unit::TestCase
     @hands.each{|key, hand|
       hand.bet = 10
       hand.double_bet
-      assert_equal(20, hand.bet)
+      # this is MAKING THE ASSUMPTION that the hand has two cards!
+      if hand.size == 2
+        assert_equal(20, hand.bet, "double bet succeeded")
+      else
+        assert_equal(10, hand.bet, "double bet failed")
+      end
     }
   end
 
@@ -136,6 +216,42 @@ class HandTest < Test::Unit::TestCase
       hand.stand
       assert_equal(HandStatus::STAND, hand.status)
     }
+  end
+
+  # testing ability to split a hand
+  def test_split_and_double
+    hand = Hand.new
+    hand.hit(Card.new("A","D"))
+    hand.hit(Card.new("A","S"))
+    # place a bet
+    hand.bet = 100
+
+    # can you split?, are you an ace
+    assert(hand.split? && hand.has_aces? && hand.size == 2)
+
+    # split them and make sure split properties are all satisfied
+    new_hand = hand.split()
+    assert_equal(1, hand.size, "Number of cards after split")
+    assert_equal(1, new_hand.size, "Number of cards after split")
+    assert(hand.has_aces? && new_hand.has_aces?, "Correct cards split")
+    assert(!hand.split? && !new_hand.split?, "Hands can no longer be split")
+    assert_equal(100, new_hand.bet, "Bet duplicated")
+    assert_equal(100, hand.bet, "Bet remains")
+
+    # now, double the bets
+    assert(!new_hand.double?, "Cannot double bet on a single card")
+    new_hand.hit(Card.new("K","D"))
+    assert(new_hand.double_bet)
+    assert_equal(hand.bet*2, new_hand.bet)
+  end
+
+  # test printability
+  def test_string
+    puts "Test hand conversion to string."
+    puts "Multiple hands of each type: busted, playable, blackjack."
+    puts 
+    @hands.each{ |key, hand| puts hand.to_s }
+    puts
   end
 end
 

@@ -1,0 +1,86 @@
+Author: Luis Perez
+Code Review: BlackJack on Ruby
+Date: 1/8/2015
+
+Issues encountered (suggested by Peter):
+  1.There are situations where your program crashes. See if you can make it so
+    that your program is always stable.
+  2.There's a small bug (probably more of a rules-misunderstanding) in the way
+    you handle splitting. See if you can fix it. I'd recommend finding an online
+    version of the game to play rather than just reading rules - it can help a
+    lot, as most written-out versions of the rules can be confusing.
+  3.There's a bug in the way you handle betting and splitting that can result in
+    the player getting the wrong amount of money. See if you can find and fix it.
+
+Additional Issues Encountered (Suggested by Luis):
+  4.Game does not reset correctly after the end of a game. It does not reset the
+  cash attribute for the player objects.
+  5.Decimal bets are accepted (to any precision) when only integral bets should
+  be accepted. There exist other input validation issues - more details in the
+  modifications section.
+  6.Inconsistent style (general issue).
+  7.Doubling down is not incorporated in its entirety. You cannot double down on
+    a bet after the first hit. 
+
+Modifications:
+  => Issue 1 - crashes
+    • Removed debugging line in split? method (see Cards.rb, line 286) which 
+      would lead to error when called with a hand with < 2 cards.
+    • Re-implemented retry method. It had been incorporated into body of prompt
+      method during code refactoring of InputOutput.rb. The retry method had been
+      mistake for a private method when it needs to be public so it can be used 
+      by the Game class (see Game.rb, line 233). The issue is now fixed and the 
+      program no longer crashes. 
+  => Isse 2 - handling splitting
+    • Modified split_hand method in player class to guarantee the Player is owner
+      of the hand before splitting. Previously, this was not checked and could 
+      lead to improper payouts due to splitting a hand which did not belong to
+      the player.
+  => Issue 3 - handling of betting/splitting
+    • Fixed the @bet attribute of the Player class. It should represent the 
+      amount of money the player bets on a new hand, not the total about he has
+      bet thus far. The misunderstanding led to an update to the @bet property
+      when the player splits/doubles his hand, which could lead to a malformed
+      @bet amount in the case of multiple hands. 
+    • Added a new @total_bet property to now perform the task of tracking the 
+      total amount the player has bet thus far. This is useful in the 
+      incomplete_round method so players can be returned their incomplete bets.
+      The value is modified on bet changes and on the start of a new round 
+      (reset to 0). 
+    • Changed finish_round method to incorporate the fact that a hand might be a
+      “push” (no money exchanges hands). The “push” idea had been misunderstood
+      previously. Also added required methods to IO class to inform the user of
+      the results.
+  => Issue 4 - Ending complete game
+    • Added reset_players method to Game class that restores the @cash attribute
+    for the player class to the default specified by the user at the launch of
+    the program. Methods incomplete_round and play call reset_players. (Issue 4)
+  => Issue 5 - input verification
+    • Added additional checks to the get_bet method in InputOutput.rb to prevent
+      decimal bets from occurring. 
+    • Added additional checks to ensure user input is integral in order to avoid
+      situations where a user requests fractional players. While this did not
+      lead to any obvious bugs – because the program converts inputs to integers
+      – it causes unnecessary user confusion. Renamed prompt_positive method in
+      IO Class to prompt_positive_integer to account for the changes.
+  => Issue 6 - style consistency  
+    • Standardized all uses of logical ors and ands as “||” and “&&” respectively
+      to improve coding style and maintain consistency. 
+  => Issue 7 - doubling down
+    • Added methods double? and modified method split? to incorporate more complex
+      rules about doubling down – for example, you can’t hit and then double down
+      on a bet. You also cannot split and immediately double without receiving 
+      the next card. 
+
+Suggested improvemts to game play:
+  1. Incorporate ability for the player to place an insurance on his hands.
+  2. Expand the testing suite.
+
+Implemented suggestions thus far:
+  => Testing suite
+    • Expanded the testing suite included with the game so it tests all public 
+      methods at least once. The intentions is to test only functionality and 
+      basic correctness, not necessarily full correctness, of these methods.
+      For example, this is the case with the IO Class as the development time 
+      required to write out full test is large and tests would need to be 
+      rewritten with changes to the IO classes extremely frequently. 

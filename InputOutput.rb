@@ -29,7 +29,7 @@ class InputOutput
   def instructions
     puts 
     puts "For instructions, press i."
-    puts "For statistics on current game, place m"
+    puts "For statistics on current game, press m"
     puts "To quit, press q."
     puts
     puts "These are the actions you can perform on each hand:"
@@ -59,7 +59,7 @@ class InputOutput
     end
 
     puts "You completed #{games} complete games"
-    puts "   and #{rounds} rounds in the final game."
+    puts "   && #{rounds} rounds in the final game."
   end
 
   # Shows the hands of the players passed as inputs
@@ -76,14 +76,23 @@ class InputOutput
     display("#{player.name} has: #{player.hands[i].cards[j]}\n\n")
   end
 
-  # Shows the player and his hand
+  # Shows the player && his hand
   def show_hand(player, hand)
     display("#{player.name} has hand: #{hand.to_s}.")
   end
 
-  # retrieves the move selection from the suers and returns it to the string
+  # retrieves the move selection from the suers && returns it to the string
   # in any format you'd like
-  def get_move
+  def get_move(player, hand)
+    # tell the player what we can do
+    puts
+    puts "You can [h]it"
+    puts "or [s]tand" unless !hand.stand?
+    puts "or [d]ouble down" unless !hand.double?
+    puts "or s[p]lit" unless !hand.split?
+    puts 
+
+    # now prompt the player
     result = nil
     while not result
       result = prompt("What would you like to do? [h]:", "h")
@@ -93,17 +102,17 @@ class InputOutput
 
   # retrieves the number of decks in the shoe for this blackjack game instance
   def get_shoe_size
-    return prompt_positive("Number of decks at table? [#{Decks::MIN_DECKS}]", Decks::MIN_DECKS)
+    return prompt_positive_integer("Number of decks at table? [#{Decks::MIN_DECKS}]", Decks::MIN_DECKS)
   end
 
   # retrieves default value of cash to be used for each starting player
   def get_default_cash(curr_cash)
-    return prompt_positive("How much cash per player? [#{curr_cash}]", curr_cash)
+    return prompt_positive_integer("How much cash per player? [#{curr_cash}]", curr_cash)
   end
 
   # retrieves the number of players in the game
   def get_num_players
-    return prompt_positive("Number of players? [1]",1)
+    return prompt_positive_integer("Number of players? [1]",1)
   end
 
   # retrieves the name of a single player
@@ -111,13 +120,14 @@ class InputOutput
     return prompt("Player Name? [Player #{name}]","Player #{name}")
   end
 
-  # retrieves the user for a bet between min and max
+  # retrieves the user for a bet between min && max
   def get_bet(player,min,max,step)
     result = nil
-    while not result
-      result = prompt("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
-                      min).to_i
-      if result < min || result > max || result > player.cash
+    while not result 
+      string = prompt("#{player.name}, what is your initial bet? [#{min}...#{max}] by #{step}? [#{min}]",
+                      min)
+      result = string.to_i
+      if result < min or result > max or result > player.cash or result.to_s != string
         result = nil
         puts "Please try again!"
       end 
@@ -167,13 +177,17 @@ class InputOutput
     display("\n\n ---------------- TIME TO SETTLE ---------------- \n\n")
   end
 
+  def retry
+    puts "Please try again!"
+  end
+
   ##### HELPER FUNCTIONS - Do not access outside of class ######
   private # declares all methods below as private
 
   # Prompts the user for an integer > 0. Empty entry returns default.
-  def prompt_positive(msg, default)
+  def prompt_positive_integer(msg, default)
     def positive(x)
-      return x.to_i > 0
+      return x.to_i > 0 && x.to_i.to_s == x
     end
     return promptFunction(msg, default, method(:positive)).to_i
   end
@@ -181,8 +195,8 @@ class InputOutput
   # returns true on conformation of message, false otherwise
   def prompt_yes_no(msg, default)
     def yes_no(x)
-      return (x.downcase == "y" || x.downcase == "yes" ||
-        x.downcase == "n" || x.downcase == "no")
+      return (x.downcase == "y" or x.downcase == "yes" or
+        x.downcase == "n" or x.downcase == "no")
     end
     return promptFunction(msg, default, method(:yes_no)).chars.first == "y"
   end
@@ -212,7 +226,7 @@ class InputOutput
         result = nil
         instructions
       elsif result == ""
-        return default
+        return default.to_s
       else 
         return result 
       end

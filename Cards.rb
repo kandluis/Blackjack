@@ -3,7 +3,7 @@
 # => Contains classes dealing directly with cards:
 #    Card - a single card object
 #    Hand - a single hand of cards
-#    Decks - a generalized class which allows for multiple decks (used
+#    Decks - a generalized class which allows for a collection of decks (used
 #             for the shoe)
 ###
 
@@ -26,7 +26,7 @@ class SymbolVals < Hash
   end
 end
 
-# List of possible suits (D)iamonds, (C)lubs, (H)earts, and (S)pades
+# List of possible suits (D)iamonds, (C)lubs, (H)earts, && (S)pades
 class CardSuits < Array
   def initialize
     self[0] = "D"
@@ -37,25 +37,26 @@ class CardSuits < Array
 end
 
 # A Card is either valid/invalid, consists of a symbol (A,2,...,10,J,Q,K)
-# and belong to one of (D,C,H,S) suits
+# && belong to one of (D,C,H,S) suits
 # Variables:
 #  .suit
 #  .symbol
 # Methods:
-#  .ace? -> if card can be multiple values (A can be 1 or 11)
+#  .ace? -> if card can be multiple values (A can be 1 || 11)
 #  .all_values -> array of all values card can have
 #  .to_s -> 
 class Card
   # mark readable attributes (should not be changed)
-  attr_reader :symbol, :suit, :value
+  attr_reader :symbol, :suit, :is_valid
 
   @@cardSuits = CardSuits.new
   @@symbolVals = SymbolVals.new
 
   def initialize(symbol, suit)
-    if @@symbolVals.has_key?(symbol) and @@cardSuits.include?(suit)
+    if @@symbolVals.has_key?(symbol) && @@cardSuits.include?(suit)
       @suit = suit
       @symbol = symbol
+      @is_valid = true
     else
       @is_valid = false
     end
@@ -83,10 +84,16 @@ class Card
   end
 
   # Returns text version of the card in format SYMBOL (SUIT) of VALUES
-  # VALUES := VALUE or VALUES
+  # VALUES := VALUE || VALUES
   def to_long_s
-    text = self.to_s
-    self.all_values.each {|value| text += "or #{value}"}
+    text = self.to_s + " of "
+    values = self.all_values
+    values_length = values.length
+    values.each_with_index {|index, value| 
+      text += "#{value}"
+      text += (index != values_length - 1) ? "." : " or "
+    } 
+
     return text
   end
 end
@@ -116,7 +123,7 @@ class Decks
     @cards = []
 
     # at lest one deck
-    if not @num_decks.is_a?(Integer) or @num_decks < MIN_DECKS
+    if not @num_decks.is_a?(Integer) || @num_decks < MIN_DECKS
       raise ArgumentError, "Must have at least one deck."
     end
 
@@ -128,7 +135,7 @@ class Decks
   end
 
   # Creates a single array of cards representing a single, standard deck based on
-  # the available suits and card symbols
+  # the available suits && card symbols
   def createDeck
     deck = []
     for suit in @@cardSuits
@@ -142,10 +149,11 @@ class Decks
     return deck
   end
 
-  # Removes top num_cards of deck and returns those cards
+  # Removes top num_cards of deck && returns those cards
   # Returns nil if no cards exist in the deck to fulfill the request
   def deal(num_cards)
-    return @cards.slice!(0,num_cards)
+    card_lst = @cards.slice!(0,num_cards)
+    return (num_cards == 1 ? ((card_lst == nil) ? nil : card_lst[0]) : card_lst)
   end
 
   # Adds a new card to the bottom of the deck
@@ -159,12 +167,19 @@ class Decks
     @cards.replace @cards.sort_by {rand}
   end
 
+  # returns the size of the deck in terms of cards
+  def size
+    return @cards.length
+  end
 
   # Converts deck to a string, with cards printed in current shuffled order
   def to_s
-    text = "[#@num_decks deck(s) to start]\n"
+    text = "[#@num_decks deck" + ((@num_decks == 1) ? "" : "s") + " to start]\n"
+
+    # assuming 4 characters per card, plus comma, plus space each card takes 
+    # 6 characters. This gives a total of ~13 cards per line
     @cards.each_with_index.map { |c, i| 
-      if i % 20 == 0
+      if i % 13 == 0
          text += "\n"
       else
         text += ", "
@@ -249,7 +264,7 @@ class Hand
     end
   end
 
-  # Can this hand be hit or has it already busted (or been set to stand)
+  # Can this hand be hit || has it already busted (or been set to stand)
   def hit?
     return self.total.select{|value| value <= BJ_HAND} != [] && @status != HandStatus::STAND
   end
@@ -269,7 +284,12 @@ class Hand
     @status = HandStatus::STAND
   end
 
-  # splits the hand - updates the current hand, and returns the new one
+  # Can the hand stand?
+  def stand?
+    return @status == HandStatus::PLAY
+  end
+
+  # splits the hand - updates the current hand, && returns the new one
   # returns nil if the hand cannot be split
   def split
     if self.split? 
@@ -284,18 +304,34 @@ class Hand
 
   # Can this hand be split?
   def split?
-    puts "#{@@symbolVals[@cards[0].symbol]} #{@@symbolVals[@cards[1].symbol]}" 
     return @cards.length == 2 && @@symbolVals[@cards[0].symbol] == @@symbolVals[@cards[1].symbol]
   end
 
+  # You can double down only after looking at your first two cards on a hand 
+  # You cannot take a hit && double down. For more, see 
+  # https://www.cs.bu.edu/~hwxi/academic/courses/CS320/Spring02/assignments/06/blackjack.html
+  # However, you CAN double down after splitting and receiving a hit
+  def double?
+    return @cards.length == 2
+  end
+  
   # double bet on card
   def double_bet
-    @bet *= 2
+    if double? 
+      @bet *= 2
+      return true
+    else
+      return false
+    end
   end
 
   # Does the hand contain an A
   def has_aces?
     return (@cards.map {|card| card.symbol}).include?("A")
+  end
+
+  def size
+    return @cards.length
   end
 
   # Return a list of values for this hand. It will return an empty list in the case
@@ -318,7 +354,7 @@ class Hand
         updated_values += values.map{|prev_value| prev_value + value}
       }
 
-      # remove all repeat values and those > BJ_HAND so we don't do unnecessary work later
+      # remove all repeat values && those > BJ_HAND so we don't do unnecessary work later
       values = updated_values.uniq
     }
 

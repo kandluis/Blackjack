@@ -25,7 +25,7 @@ trap("SIGINT") { throw :quit }
 
 class Game
 
-  # Set debug to True to see dealer hands and game deck
+  # Set debug to True to see dealer hands && game deck
   attr_accessor :debug
 
   # Game options (default starting cash for each player)
@@ -52,7 +52,7 @@ class Game
   end
 
   # Main Function - plays the entire blackjack game:
-  #   Get Input Parameters and Initialize Game
+  #   Get Input Parameters && Initialize Game
   #   While user wants to continue playing at the table
   #     Create table deck, shuffle deck
   #     While the deck has cards - players have money
@@ -67,11 +67,11 @@ class Game
       @io.welcome_msg
       init_game
 
-      # if user quits, go ahead and still show end results
+      # if user quits, go ahead && still show end results
       # user want to continue
-      while @game_num == 1 || continue_play?
+      while @game_num == 1 or continue_play?
         start_game
-        # play while we have cards and we still have players with money
+        # play while we have cards && we still have players with money
         while can_play?
           @io.start_round(@game_num, @num_rounds + 1)
           @io.show_deck(@deck) if @debug
@@ -104,6 +104,8 @@ class Game
         end
 
         @game_num += 1
+        reset_players
+
       end
     end
 
@@ -182,13 +184,13 @@ class Game
     return true
   end
 
-  # displays the hand of the dealer and players (used for debugging)
+  # displays the hand of the dealer && players (used for debugging)
   def show_hands
     @io.show_hands(@players + [@dealer])
   end
 
   # plays a single round of black jack! Each player has 2 cards, dealer also has 2
-  # Needs to show dealer card to players, and then ask for action and loop until
+  # Needs to show dealer card to players, && then ask for action && loop until
   # everyone is bust or everyone is stand!
   # Returns false if the round could not be completed, true otherwise
   def play_round
@@ -208,14 +210,10 @@ class Game
           if card == nil
             return false
           end
-          card = card[0]
-          if card == nil
-            return false
-          end
           result = nil
           # analyze results to figure out what needs to get done!
           while not result
-            result = @io.get_move
+            result = @io.get_move(player, hand)
             if result == "m"
               result = nil
               @io.show_stats(@players, @num_rounds, @game_num)
@@ -237,7 +235,7 @@ class Game
                 # double aces means we stand
                 split = player.hands[player.hands.length - 1]
                 if split.has_aces? && hand.has_aces?
-                  # get one more card per hand and then stand
+                  # get one more card per hand && then stand
                   cards = @deck.deal(2)
                   if cards == nil
                     return false
@@ -264,11 +262,12 @@ class Game
     return true
   end
 
-  # after each round, we want to empty out the player hands and reset their bets
+  # after each round, we want to empty out the player hands && reset their bets
   def reset_round
     for player in @players + [@dealer]
       player.start_new_round
       player.bet = 0
+      player.total_bet = 0
     end
   end
 
@@ -287,10 +286,6 @@ class Game
       if card == nil
         return false
       end
-      card = card[0]
-      if card == nil
-        return false
-      end
       dealer_hand.hit(card)
       @io.show_hand(@dealer, dealer_hand)
       sleep(@wait)
@@ -301,15 +296,15 @@ class Game
     for player in @players
       for hand in player.hands
         @io.show_hand(player, hand)
-        # if both bust or both bj or values are equal
-        if (hand.bust? && dealer_hand.bust?) ||
-          (hand.bj? && dealer_hand.bj?) || 
+        # push - both bust or both bj or values are equal
+        if (hand.bust? && dealer_hand.bust?) or
+          (hand.bj? && dealer_hand.bj?) or 
           (hand.max_hand == dealer_hand.max_hand)
           @io.player_tie(player)
+          player.won_bet(hand.bet) # need to return the bet to the player
         else
-          # player busted or dealer black jack or both player and dealer busted
-          # or player lost
-          if (hand.bust? || dealer_hand.bj? ||
+          # player busted or dealer black jack or player lost
+          if (hand.bust? or dealer_hand.bj? or
             (!dealer_hand.bust? && hand.max_hand < dealer_hand.max_hand))
             @dealer.won_bet(hand.bet)
             @io.player_lose(player)
@@ -318,7 +313,7 @@ class Game
             player.won_bet(2.5*hand.bet)
             @io.player_win_bj(player)
           # dealer busted or player wins
-          elsif dealer_hand.bust? || hand.max_hand > dealer_hand.max_hand
+          elsif dealer_hand.bust? or hand.max_hand > dealer_hand.max_hand
             player.won_bet(2*hand.bet)
             @io.player_win(player)
           else 
@@ -338,12 +333,17 @@ class Game
   def incomplete_round
     @io.out_of_cards
     # restore player bets 
-    for player in @players
-      player.cash += player.bet
-    end
+    reset_players
 
     # reset players
     reset_round
+  end
+
+
+  def reset_players
+    for player in @players
+      player.cash += player.total_bet
+    end
   end
 
 end

@@ -10,14 +10,15 @@ require 'Cards'
 
 class Player
 
-  attr_accessor :name, :cash, :bet, :hands
+  attr_accessor :name, :cash, :bet, :total_bet, :hands
 
   # New player with no hands, name name, and available cash cash
   def initialize(name, cash)
     @name = name
     @cash = cash
     @hands = []
-    @bet = 0
+    @bet = 0 # amount of money player is betting on default hand
+    @total_bet = 0 # total amount bet on all hands thus far
 
   end
 
@@ -44,8 +45,9 @@ class Player
   # places the bet on the specified hand. The hand must belong to the player and
   # the player must have enough cash to make the bet
   def place_bet(hand)
-    if @hands.include?(hand) && @cash - @bet >= 0
+    if @hands.include?(hand) and @cash - @bet >= 0
       hand.bet = @bet
+      @total_bet += hand.bet
       @cash -= @bet
       return true
     else
@@ -56,10 +58,10 @@ class Player
   # double bet on the specified hand, returns false if not enough cash or not owner
   # of the hand
   def double_bet(hand)
-    if @hands.include?(hand) && @cash - hand.bet > 0
+    if @hands.include?(hand) and hand.double? and @cash - hand.bet > 0
       @cash -= hand.bet
+      @total_bet += hand.bet
       hand.double_bet
-      @bet *= 2
       return true
     else
       return false
@@ -74,15 +76,11 @@ class Player
   # splits the specified hand into two hands if possible
   # returns true on success, false if not enough cash
   def split_hand(hand)
-    if hand.split?
-      if @cash - hand.bet >= 0
-        @hands << hand.split
-        @bet *= 2
-        @cash -= hand.bet
-        return true
-      else
-        return false
-      end
+    if @hands.include?(hand) and hand.split? and @cash - hand.bet >= 0
+      @hands << hand.split
+      @cash -= hand.bet
+      @total_bet += hand.bet
+      return true
     else
       return false
     end
