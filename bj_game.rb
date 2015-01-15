@@ -68,7 +68,7 @@ class Game
 
       # if user quits, go ahead && still show end results
       # user want to continue
-      while @game_num == 1 or continue_play?
+      while @game_num == 1 || continue_play?
         start_game
         # play while we have cards && we still have players with money
         while can_play?
@@ -190,7 +190,7 @@ class Game
 
   # plays a single round of black jack! Each player has 2 cards, dealer also has 2
   # Needs to show dealer card to players, && then ask for action && loop until
-  # everyone is bust or everyone is stand!
+  # everyone is bust || everyone is stand!
   # Returns false if the round could not be completed, true otherwise
   def play_round
     @io.show_card(@dealer, 0, 0)
@@ -295,15 +295,17 @@ class Game
     for player in @players
       for hand in player.hands
         @io.show_hand(player, hand)
-        # push - both bust or both bj or values are equal
-        if (hand.bust? && dealer_hand.bust?) or
-          (hand.bj? && dealer_hand.bj?) or 
-          (hand.max_hand == dealer_hand.max_hand)
+        # push - both bust || both bj || values are equal (and neither bust and
+                                                           # neither bj)
+        if (hand.bust? && dealer_hand.bust?) ||
+          (hand.bj? && dealer_hand.bj?) || 
+          (hand.max_hand == dealer_hand.max_hand &&
+           (!hand.bust? && !dealer_hand.bust? && !hand.bj? && !dealer_hand.bj?))
           @io.player_tie(player)
           player.won_bet(hand.bet) # need to return the bet to the player
         else
-          # player busted or dealer black jack or player lost
-          if (hand.bust? or dealer_hand.bj? or
+          # player busted || dealer black jack || player lost
+          if (hand.bust? || dealer_hand.bj? ||
             (!dealer_hand.bust? && hand.max_hand < dealer_hand.max_hand))
             @dealer.won_bet(hand.bet)
             @io.player_lose(player)
@@ -311,8 +313,8 @@ class Game
           elsif hand.bj?
             player.won_bet(2.5*hand.bet)
             @io.player_win_bj(player)
-          # dealer busted or player wins
-          elsif dealer_hand.bust? or hand.max_hand > dealer_hand.max_hand
+          # dealer busted || player wins
+          elsif dealer_hand.bust? || hand.max_hand > dealer_hand.max_hand
             player.won_bet(2*hand.bet)
             @io.player_win(player)
           else 
