@@ -82,15 +82,16 @@ class Player
   end
 
   # splits the specified hand into two hands if possible
-  # returns true on success, false if not enough cash
+  # returns the new hand or nil 
   def split_hand(hand)
     if split_hand?(hand)
-      @hands << hand.split
+      new_hand = hand.split
+      @hands << new_hand
       @cash -= hand.bet
       @total_bet += hand.bet
-      return true
+      return new_hand
     else
-      return false
+      return nil
     end
   end
 
