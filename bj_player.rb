@@ -73,7 +73,7 @@ class Player
 
   # can the player double his bet on the specified hand?
   def double_bet?(hand)
-    return @hands.include?(hand) && hand.double? && @cash - hand.bet > 0
+    return @hands.include?(hand) && hand.double? && @cash - hand.bet >= 0
   end
 
   # adds winnings to player
