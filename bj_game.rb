@@ -329,14 +329,13 @@ class Game
           end
         end
       end
-
-      return true
     end
 
     # find broke players
     @losers += @players.select{ |player| player.cash <= 0 }
     @players = @players.select{ |player| player.cash > 0}
 
+    return true
   end
 
   # this is executed in the case of an incomplete round
