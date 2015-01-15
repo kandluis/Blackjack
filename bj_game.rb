@@ -18,7 +18,8 @@
 #   => .wait = wait time in seconds between each round of the game
 
 require 'bj_display'
-require 'bj_card'
+require 'bj_deck'
+require 'bj_hand'
 require 'bj_player'
 
 class Game

@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
 require 'getoptlong'
-require 'Game'
+require 'bj_game'
 
 # Prints out help for BlackJack (BlackHack!) 
 def usage

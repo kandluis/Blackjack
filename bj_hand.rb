@@ -1,5 +1,6 @@
 require 'bj_symbol'
 require 'bj_suit'
+require 'bj_hand'
 
 # Enumerate possible types for a hand:
 #   STAND - meaning the player has set this hand to stand until next round
