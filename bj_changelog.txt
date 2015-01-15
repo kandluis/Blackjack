@@ -73,9 +73,9 @@ Modifications:
       previously. Also added required methods to IO class to inform the user of
       the results.
   => Issue 4 - Ending complete game
-    • Added reset_players method to Game class that restores the @cash attribute
-    for the player class to the default specified by the user at the launch of
-    the program. (Issue 4)
+    • Added reset_players method to Game class that gives money equal to the 
+      starting bankroll to ALL the players. The method is only called when 
+      all of the players lose (run out of money). (Issue 4)
   => Issue 5 - input verification
     • Added additional checks to the get_bet method in InputOutput.rb to prevent
       decimal bets from occurring. 

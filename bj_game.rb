@@ -342,7 +342,7 @@ class Game
     reset_round
   end
 
-  # simply fives the players back their money
+  # simply gives the players back their money
   def restore_players
     for player in @players
       player.cash += player.total_bet
@@ -352,6 +352,10 @@ class Game
   # gives all the players back their money and more cash
   def reset_players
     restore_players
+
+    # add losers back into the mix
+    @players << @losers
+    @losers = []
     for player in @players
       player.cash += @cash 
     end
