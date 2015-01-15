@@ -103,6 +103,7 @@ class Game
         end
 
         @game_num += 1
+        @num_rounds = 0
         if @players.length == 0
           reset_players
         end
