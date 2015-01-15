@@ -117,7 +117,7 @@ class Hand
 
   # Can this hand be split?
   def split?
-    return @cards.length == 2 && @@symbolVals[@cards[0].symbol] == @@symbolVals[@cards[1].symbol]
+    return @cards.length == 2 && @cards[0].symbol == @cards[1].symbol
   end
 
   # You can double down only after looking at your first two cards on a hand 

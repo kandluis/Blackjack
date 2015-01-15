@@ -57,6 +57,8 @@ Modifications:
         - is_split variable for each hand keeps track of whether the hand has been
           split or is a product of a split, which prevents double down by being 
           incorporated into the double? method
+    • Cards can only be split if they match in SYMBOL not VALUE. Modified the 
+      split? method to take this into consideration. 
   => Issue 3 - handling of betting/splitting
     • Fixed the @bet attribute of the Player class. It should represent the 
       amount of money the player bets on a new hand, not the total about he has
