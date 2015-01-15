@@ -19,25 +19,44 @@ Additional Issues Encountered (Suggested by Luis):
   be accepted. There exist other input validation issues - more details in the
   modifications section.
   6.Inconsistent style (general issue).
-  7.Doubling down is not incorporated in its entirety. You cannot double down on
-    a bet after the first hit. 
+  7.Doubling down is not incorporated in its entirety. The rules state that you
+   cannot double down on a bet after the first hit. However, it is possible to
+   double down on split hands. Therefore, the invariant which was previously 
+   ignored is that you can double down only on hands with two cards. 
   8.Code structure. Cards.rb has multiple classes which have each become rather 
-    large.
+    large. This became rather apparent after implementing the test classes.
 
 Modifications:
   => Issue 1 - crashes
-    • Removed debugging line in split? method (see Cards.rb, line 286) which 
-      would lead to error when called with a hand with < 2 cards.
+    • Removed debugging line in split? method (see Cards.rb, line 286, git commit:
+      c6416a224cb12482e60dcb0a4a19f1a83066c45a) which would lead to error when 
+      called with a hand with < 2 cards.
     • Re-implemented retry method. It had been incorporated into body of prompt
       method during code refactoring of InputOutput.rb. The retry method had been
-      mistake for a private method when it needs to be public so it can be used 
-      by the Game class (see Game.rb, line 233). The issue is now fixed and the 
-      program no longer crashes. 
-  => Isse 2 - handling splitting
+      mistaken for a private method when it needs to be public so it can be used 
+      by the Game class (see Game.rb, line 233, git commit: c6416a224cb12482e60dcb0a4a19f1a83066c45a).
+      The issue is now fixed and the program no longer crashes. 
+  => Issue 2 - handling splitting
     • Modified split_hand method in player class to guarantee the Player is owner
       of the hand before splitting. Previously, this was not checked and could 
       lead to improper payouts due to splitting a hand which did not belong to
       the player.
+    • What follows are clarifications on the rules for splitting in black jack 
+      in conjunction with the modifications done to implement them in the game:
+        + Aces can only be split once and are dealt one more card immediately.
+        - After splitting, if both hands contain an ace, then the hands are hit
+          once more and then set to stand. We had previously only hit them but
+          not set them to stand (see Line 244, bj_game.rb)
+        + Blackjack on an ace split is not considered a blackjack.
+        - The blackjack? method now checks the ace_split property of the hand
+          class to check if it is a true blackjack.
+        + A player can only have a maximum of four hands.
+        - Added MAX_SPLITS constant to Hand class. It is used to verify the player
+          never splits more than intended by using the hand_split? method.
+        + Doubling after a split is not allowed.
+        - is_split variable for each hand keeps track of whether the hand has been
+          split or is a product of a split, which prevents double down by being 
+          incorporated into the double? method
   => Issue 3 - handling of betting/splitting
     • Fixed the @bet attribute of the Player class. It should represent the 
       amount of money the player bets on a new hand, not the total about he has

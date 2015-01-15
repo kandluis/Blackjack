@@ -87,9 +87,9 @@ class Display
     # tell the player what we can do
     puts
     puts "You can [h]it"
-    puts "or [s]tand" unless !hand.stand?
-    puts "or [d]ouble down" unless !hand.double?
-    puts "or s[p]lit" unless !hand.split?
+    puts "or [s]tand" 
+    puts "or [d]ouble down" unless !player.double_bet?(hand)
+    puts "or s[p]lit" unless !player.split_hand?(hand)
     puts 
 
     # now prompt the player

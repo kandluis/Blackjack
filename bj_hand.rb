@@ -31,7 +31,7 @@ class Hand
   BJ_HAND = 21
 
   # need to change these from the outside
-  attr_accessor :bet, :state, :status
+  attr_accessor :bet, :state, :status, :ace_split, :is_split
 
   # need only read access
   attr_reader :cards
@@ -43,6 +43,8 @@ class Hand
     @bet = 0
     @status = HandStatus::PLAY
     @cards = []
+    @ace_split = false
+    @is_split = false
 
     return self
   end
@@ -81,7 +83,7 @@ class Hand
 
   # Is this hand a blackjack?
   def bj?
-    return self.max_hand == BJ_HAND
+    return self.max_hand == BJ_HAND && !@ace_split
   end
 
   # set the status of the hand to stand
@@ -98,7 +100,12 @@ class Hand
   # returns nil if the hand cannot be split
   def split
     if self.split? 
+      # keep track of whether the hand has been split before
+      @ace_split = true if has_aces?
+      @is_split = true
       hand = Hand.new
+      hand.ace_split = @ace_split
+      hand.is_split = @is_split
       hand.hit(@cards.slice!(1))
       hand.bet = @bet
       return hand
@@ -117,7 +124,7 @@ class Hand
   # https://www.cs.bu.edu/~hwxi/academic/courses/CS320/Spring02/assignments/06/blackjack.html
   # However, you CAN double down after splitting and receiving a hit
   def double?
-    return @cards.length == 2
+    return @cards.length == 2 && !@is_split
   end
   
   # double bet on card

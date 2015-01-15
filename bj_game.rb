@@ -227,24 +227,22 @@ class Game
               hand.stand
               @deck.add_card(card)
             elsif result == "p" 
-              if !player.split_hand(hand)
+              split = player.split_hand(hand)
+              if !split
                 @io.retry
                 @deck.add_card(card)
                 result = nil
-              else 
-                # double aces means we stand
-                split = player.hands[player.hands.length - 1]
-                if split.has_aces? && hand.has_aces?
-                  # get one more card per hand && then stand
-                  cards = @deck.deal(2)
-                  if cards == nil
-                    return false
-                  end
-                  hands = [hand,split]
-                  cards.each_with_index{ |i, c| 
-                    hands[i].hit(c)
-                  }
+              # if two aces were split, each new hand receives a new card and stands
+              elsif split.has_aces? && hand.has_aces?
+                cards = @deck.deal(2)
+                if cards == nil
+                  return false
                 end
+                hands = [hand,split]
+                cards.each_with_index{ |i, c| 
+                  hands[i].hit(c)
+                  hands[i].stand
+                }
               end
             else
               @io.retry

@@ -12,7 +12,10 @@ class Player
 
   attr_accessor :name, :cash, :bet, :total_bet, :hands
 
-  # New player with no hands, name name, and available cash cash
+  # you can only split up to three times
+  MAX_SPLITS = 3
+
+  # New player with no hands, name name, && available cash cash
   def initialize(name, cash)
     @name = name
     @cash = cash
@@ -45,7 +48,7 @@ class Player
   # places the bet on the specified hand. The hand must belong to the player and
   # the player must have enough cash to make the bet
   def place_bet(hand)
-    if @hands.include?(hand) and @cash - @bet >= 0
+    if @hands.include?(hand) && @cash - @bet >= 0
       hand.bet = @bet
       @total_bet += hand.bet
       @cash -= @bet
@@ -58,7 +61,7 @@ class Player
   # double bet on the specified hand, returns false if not enough cash or not owner
   # of the hand
   def double_bet(hand)
-    if @hands.include?(hand) and hand.double? and @cash - hand.bet > 0
+    if double_bet?(hand)
       @cash -= hand.bet
       @total_bet += hand.bet
       hand.double_bet
@@ -66,6 +69,11 @@ class Player
     else
       return false
     end
+  end
+
+  # can the player double his bet on the specified hand?
+  def double_bet?(hand)
+    return @hands.include?(hand) && hand.double? && @cash - hand.bet > 0
   end
 
   # adds winnings to player
@@ -76,7 +84,7 @@ class Player
   # splits the specified hand into two hands if possible
   # returns true on success, false if not enough cash
   def split_hand(hand)
-    if @hands.include?(hand) and hand.split? and @cash - hand.bet >= 0
+    if split_hand?(hand)
       @hands << hand.split
       @cash -= hand.bet
       @total_bet += hand.bet
@@ -84,6 +92,11 @@ class Player
     else
       return false
     end
+  end
+
+  # can the player split the specified hand?
+  def split_hand?(hand)
+    return @hands.include?(hand) && hand.split? && @hands.length <= MAX_SPLITS && @cash - hand.bet >= 0
   end
 
   # called at start of a round to throw away old hands

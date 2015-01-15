@@ -73,7 +73,13 @@ class HandTest < Test::Unit::TestCase
     hand.hit(Card.new("A","D"))
     hand.hit(Card.new("A","S"))
     # place a bet
-    hand.bet = 100
+    bet = 100
+    hand.bet = bet
+
+    # now double the bet
+    assert(hand.double_bet, "Doubling bet")
+    assert_equal(bet*2, hand.bet, "Bet doubled")
+    bet = 2*bet
 
     # can you split?, are you an ace
     assert(hand.split? && hand.has_aces? && hand.size == 2)
@@ -84,14 +90,13 @@ class HandTest < Test::Unit::TestCase
     assert_equal(1, new_hand.size, "Number of cards after split")
     assert(hand.has_aces? && new_hand.has_aces?, "Correct cards split")
     assert(!hand.split? && !new_hand.split?, "Hands can no longer be split")
-    assert_equal(100, new_hand.bet, "Bet duplicated")
-    assert_equal(100, hand.bet, "Bet remains")
+    assert_equal(bet, new_hand.bet, "Bet duplicated")
+    assert_equal(bet, hand.bet, "Bet remains")
 
     # now, double the bets
     assert(!new_hand.double?, "Cannot double bet on a single card")
     new_hand.hit(Card.new("K","D"))
-    assert(new_hand.double_bet)
-    assert_equal(hand.bet*2, new_hand.bet)
+    assert(!new_hand.double_bet, "Cannot double on a split card")
   end
 
   # test printability
