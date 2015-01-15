@@ -6,7 +6,7 @@
 #   => .cash = total cash on hand for betting
 #   => .hand = array of hands available to player 
 
-require 'Cards'
+require 'bj_card'
 
 class Player
 

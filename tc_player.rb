@@ -1,6 +1,7 @@
 require 'test/unit'
-require 'Cards'
-require 'Players'
+require 'bj_card'
+require 'bj_hand'
+require 'bj_player'
 
 class TestPlayer < Test::Unit::TestCase
   # testing player

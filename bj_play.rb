@@ -6,7 +6,7 @@ require 'Game'
 # Prints out help for BlackJack (BlackHack!) 
 def usage
   puts
-  puts "ruby play.rb [OPTIONS]"
+  puts "ruby bj_play.rb [OPTIONS]"
   puts
   puts " -c, --cash [integer]:"
   puts " set the player's starting cash"
@@ -20,7 +20,7 @@ def usage
 end
 
 opts = GetoptLong.new(
-  [ "--cash", "-c", GetoptLong::NO_ARGUMENT],
+  [ "--cash", "-c", GetoptLong::REQUIRED_ARGUMENT],
   [ "--debug", "-d", GetoptLong::NO_ARGUMENT ],
   [ "--help", "-h", GetoptLong::NO_ARGUMENT ]
 )

@@ -17,11 +17,9 @@
 #   => .dealer_stay = dealer will hit until reaching this value
 #   => .wait = wait time in seconds between each round of the game
 
-require 'InputOutput'
-require 'Cards'
-require 'Players'
-
-trap("SIGINT") { throw :quit }
+require 'bj_display'
+require 'bj_card'
+require 'bj_player'
 
 class Game
 
@@ -32,7 +30,7 @@ class Game
   attr_accessor :cash
 
   def initialize()
-    @io = InputOutput.new
+    @io = Display.new
     @dealer, @deck = nil
     @num_rounds, @deck_num = 0
     @game_num = 1
@@ -220,8 +218,10 @@ class Game
             elsif result == "h"
               hand.hit(card) 
             elsif result == "d" 
-              hand.hit(card)
               player.double_bet(hand)
+              hand.hit(card)
+
+              # after you've doubled your bet, the hand must stand
               hand.stand
             elsif result == "s"
               hand.stand

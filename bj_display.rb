@@ -1,4 +1,4 @@
-# IO Class
+# Display Class
 #
 # => Implements the input/output functionality for a blackjack game.
 #    Used so we can abstract the input/output functionality. Currently implements
@@ -10,9 +10,9 @@
 trap("SIGINT") { throw :quit }
 
 # access to Decks constants
-require 'Cards'
+require 'bj_deck'
 
-class InputOutput
+class Display
   def initialize
     @players = 0
   end

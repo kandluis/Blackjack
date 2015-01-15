@@ -21,6 +21,8 @@ Additional Issues Encountered (Suggested by Luis):
   6.Inconsistent style (general issue).
   7.Doubling down is not incorporated in its entirety. You cannot double down on
     a bet after the first hit. 
+  8.Code structure. Cards.rb has multiple classes which have each become rather 
+    large.
 
 Modifications:
   => Issue 1 - crashes
@@ -63,6 +65,9 @@ Modifications:
       lead to any obvious bugs – because the program converts inputs to integers
       – it causes unnecessary user confusion. Renamed prompt_positive method in
       IO Class to prompt_positive_integer to account for the changes.
+    • Changed GetopLong::NO_ARGUMENT to GetoptLong::REQUIRED_ARGUMENT to
+      allow the user to include an optional starting cash value (bankroll) for the
+      players.
   => Issue 6 - style consistency  
     • Standardized all uses of logical ors and ands as “||” and “&&” respectively
       to improve coding style and maintain consistency. 
@@ -71,6 +76,9 @@ Modifications:
       rules about doubling down – for example, you can’t hit and then double down
       on a bet. You also cannot split and immediately double without receiving 
       the next card. 
+  => Issue 8 - code structure
+    • Adopted bj_* naming convention for the black jack game and restructured code
+      to allow for one class per file. 
 
 Suggested improvemts to game play:
   1. Incorporate ability for the player to place an insurance on his hands.
@@ -83,4 +91,7 @@ Implemented suggestions thus far:
       basic correctness, not necessarily full correctness, of these methods.
       For example, this is the case with the IO Class as the development time 
       required to write out full test is large and tests would need to be 
-      rewritten with changes to the IO classes extremely frequently. 
+      rewritten with changes to the IO classes extremely frequently.
+    • Testing suite now follows convention:
+      - tc_X.rb contains testing case for bj_X.rb. 
+      - ts_blackjack.rb is the entire testing suite. 
