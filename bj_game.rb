@@ -303,8 +303,8 @@ class Game
           (hand.bj? && dealer_hand.bj?) || 
           (hand.max_hand == dealer_hand.max_hand &&
            (!hand.bust? && !dealer_hand.bust? && !hand.bj? && !dealer_hand.bj?))
-          @io.player_tie(player)
           player.won_bet(hand.bet) # need to return the bet to the player
+          @io.player_tie(player)
         else
           # player busted || dealer black jack || player lost
           if (hand.bust? || dealer_hand.bj? ||

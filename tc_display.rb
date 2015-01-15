@@ -42,7 +42,7 @@ class TestIO < Test::Unit::TestCase
     puts "Testing show functions with random inputs."
     @io.show_deck(Decks.new(1))
     puts
-    @io.show_stats(@players, rand(@max), rand(@max))
+    @io.show_stats(@players, [], rand(@max), rand(@max))
     puts
     @io.show_hands(@players)
     puts
