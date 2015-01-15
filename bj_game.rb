@@ -103,7 +103,9 @@ class Game
         end
 
         @game_num += 1
-        reset_players
+        if @players.length == 0
+          reset_players
+        end
 
       end
     end
@@ -111,7 +113,7 @@ class Game
     # we started play
     if @deck:
       incomplete_round if started_round
-      @io.show_stats(@players, @num_rounds, @game_num)
+      @io.show_stats(@players, @losers, @num_rounds, @game_num)
     end
   end
 
@@ -215,7 +217,7 @@ class Game
             result = @io.get_move(player, hand)
             if result == "m"
               result = nil
-              @io.show_stats(@players, @num_rounds, @game_num)
+              @io.show_stats(@players, @losers, @num_rounds, @game_num)
             elsif result == "h"
               hand.hit(card) 
             elsif result == "d" 
@@ -334,16 +336,24 @@ class Game
   def incomplete_round
     @io.out_of_cards
     # restore player bets 
-    reset_players
+    restore_players
 
     # reset players
     reset_round
   end
 
-
-  def reset_players
+  # simply fives the players back their money
+  def restore_players
     for player in @players
       player.cash += player.total_bet
+    end
+  end
+
+  # gives all the players back their money and more cash
+  def reset_players
+    restore_players
+    for player in @players
+      player.cash += @cash 
     end
   end
 

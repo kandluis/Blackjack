@@ -75,7 +75,7 @@ Modifications:
   => Issue 4 - Ending complete game
     • Added reset_players method to Game class that restores the @cash attribute
     for the player class to the default specified by the user at the launch of
-    the program. Methods incomplete_round and play call reset_players. (Issue 4)
+    the program. (Issue 4)
   => Issue 5 - input verification
     • Added additional checks to the get_bet method in InputOutput.rb to prevent
       decimal bets from occurring. 

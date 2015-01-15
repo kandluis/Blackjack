@@ -53,9 +53,15 @@ class Display
   end
 
   # displays the endgame statistics
-  def show_stats(players, rounds, games)
+  def show_stats(players, losers, rounds, games)
+    puts "Players left in the game." unless players == []
     for player in players
       puts player.to_s
+    end
+
+    puts "Players that have lost so far." unless losers == []
+    for loser in losers
+      puts loser.to_s
     end
 
     puts "You completed #{games} complete games"
@@ -155,7 +161,7 @@ class Display
     display("Nice job with the BJ! Let's stay put.")
   end
   def player_tie(player)
-    display("Oh, darn! #{player.name} doesn't get anything that round! Now at $#{player.cash}.")
+    display("Oh, darn! #{player.name} doesn't get anything that round! Still at $#{player.cash}.")
   end
   def player_lose(player)
     display("Looks like the dealer got this one! #{player.name} is left with $#{player.cash}")
