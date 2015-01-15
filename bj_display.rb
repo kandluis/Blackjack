@@ -226,8 +226,7 @@ class Display
         result = nil
         instructions
       elsif result.downcase == "m"
-          display("Cannot show statistics until round has started!")
-          result = nil
+          display("Statistics can only be shown during a round!")
       elsif result == ""
         return default.to_s
       else 
