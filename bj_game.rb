@@ -98,12 +98,16 @@ class Game
             end
           end
 
-          finish_round
+          if !finish_round
+            incomplete_round
+            break
+          end
           started_round = false
         end
 
         @game_num += 1
         @num_rounds = 0
+        started_round = false
         if @players.length == 0
           reset_players
         end
@@ -325,6 +329,8 @@ class Game
           end
         end
       end
+
+      return true
     end
 
     # find broke players
@@ -355,7 +361,7 @@ class Game
     restore_players
 
     # add losers back into the mix
-    @players << @losers
+    @players += @losers
     @losers = []
     for player in @players
       player.cash += @cash 
